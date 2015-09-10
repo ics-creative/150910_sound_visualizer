@@ -8,50 +8,50 @@ module demo {
      * SoundJSでサウンドビジュアライズするクラスです。
      */
     export class SoundVisualizer {
-        // サウンドID
+        /* サウンドID */
         private SOUND_ID:string = "sound";
 
-        // Boxの間隔
+        /* Boxの間隔 */
         private BOX_INTERVAL:number = 100;
 
-        // Color
+        /* Color */
         private START_COLOR:number = 0x2DADAC;
         private END_COLOR:number = 0xFF337A;
 
-        // フーリエ変換を行う分割数。2の乗数でなくてはならない
+        /* フーリエ変換を行う分割数。2の乗数でなくてはならない */
         private FFTSIZE:number = 64;
 
-        // サウンドのパス
+        /* サウンドのパス */
         private soundPass:string;
 
-        // アナライザー
+        /* アナライザー */
         private analyserNode;
 
-        // それぞれの周波数の振幅を格納する配列
+        /* それぞれの周波数の振幅を格納する配列 */
         private freqByteDataArray:Array<Uint8Array>;
 
-        // シーン
+        /* シーン */
         private scene:THREE.Scene;
 
-        // カメラ
+        /* カメラ */
         private camera:THREE.PerspectiveCamera;
 
-        // レンダラー
+        /* レンダラー */
         private renderer:THREE.WebGLRenderer;
 
-        // マウスドラッグによるカメラのコントロール
+        /* マウスドラッグによるカメラのコントロール */
         private controls:THREE.TrackballControls;
 
-        // 地面
+        /* 地面 */
         private grid:THREE.GridHelper;
 
-        // WebAudioPluginを取得
+        /* WebAudioPluginを取得 */
         private plugin:createjs.WebAudioPlugin;
 
-        // Boxを描画するカウント
+        /* Boxを描画するカウント */
         private drawCount:number = -1;
 
-        // はじめに描画したBox
+        /* はじめに描画したBox */
         private firstBox:Box;
 
         public constructor() {
