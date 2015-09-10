@@ -1,6 +1,5 @@
 /// <reference path="ts-libs/soundjs/soundjs.d.ts" />
 /// <reference path="ts-libs/threejs/three.d.ts" />
-/// <reference path="ts-libs/threejs/three-trackballcontrols.d.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -26,6 +25,14 @@ var demo;
             this.FFTSIZE = 64;
             /** Boxを描画するカウント */
             this.drawCount = -1;
+            /** 回転角度 */
+            this.rot = 90;
+            /** マウスを押した状態かどうかを判別するフラグ */
+            this.isMouseDown = false;
+            /** ドラッグ量の差分を取るためにX座標を保持する */
+            this.oldX = 0;
+            /** 目標となる回転角度 */
+            this.targetRot = 90;
             // iOS
             if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
                 this.soundPass = "sound/sound.m4a";
@@ -33,11 +40,22 @@ var demo;
             else {
                 this.soundPass = "sound/sound.ogg";
             }
+            // touch
+            if (createjs.Touch.isSupported()) {
+                document.addEventListener("touchstart", function (event) { return _this.touchstartHandler(event); });
+                document.addEventListener("touchmove", function (event) { return _this.touchmoveHandler(event); });
+                document.addEventListener("touchend", function (event) { return _this.touchendHandler(event); });
+            }
+            else {
+                document.addEventListener("mousedown", function (event) { return _this.mousedownHandler(event); });
+                document.addEventListener("mousemove", function (event) { return _this.mousemoveHandler(event); });
+                document.addEventListener("mouseup", function (event) { return _this.mouseupHandler(event); });
+            }
             // 3D空間の作成
             this.scene = new THREE.Scene();
             // カメラの作成
             this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 200000);
-            this.camera.position.set(2500, 5000, -2500);
+            this.camera.position.set(0, 6000, 0);
             // レンダラーの作成
             this.renderer = new THREE.WebGLRenderer({ antialias: true });
             this.renderer.setClearColor(0x000000);
@@ -49,9 +67,6 @@ var demo;
             this.grid.setColors(0x333333, 0x333333);
             this.grid.position.y = -500;
             this.scene.add(this.grid);
-            // TrackballControls
-            this.controls = new THREE.TrackballControls(this.camera);
-            this.controls.target.set(0, 500, 0);
             window.addEventListener("resize", function () { return _this.resizeHandler; });
             this.resizeHandler();
             // 一つ前のループ時のBox
@@ -166,7 +181,15 @@ var demo;
          * エンターフレームイベントです
          */
         SoundVisualizer.prototype.render = function () {
-            this.controls.update();
+            // イージングの公式を用いて滑らかにする
+            // 値 += (目標値 - 現在の値) * 減速値
+            this.rot += (this.targetRot - this.rot) * 0.05;
+            //console.log(this.targetRot);
+            // 角度に応じてカメラの位置を設定
+            this.camera.position.x = 5000 * Math.sin(this.rot * Math.PI / 180);
+            this.camera.position.z = 5000 * Math.cos(this.rot * Math.PI / 180);
+            // 原点方向を見つめる
+            this.camera.lookAt(new THREE.Vector3(0, 0, 0));
             // Three.js のレンダリング
             this.renderer.render(this.scene, this.camera);
         };
@@ -222,6 +245,58 @@ var demo;
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+        /**
+         * mousedown Handler
+         * @param event
+         */
+        SoundVisualizer.prototype.mousedownHandler = function (event) {
+            this.isMouseDown = true;
+            this.oldX = event.pageX;
+        };
+        /**
+         * mousemove Handler
+         * @param event
+         */
+        SoundVisualizer.prototype.mousemoveHandler = function (event) {
+            if (this.isMouseDown) {
+                var dy = event.pageX - this.oldX;
+                this.targetRot -= dy * 0.25;
+                this.oldX = event.pageX;
+            }
+        };
+        /**
+         * mouseup Handler
+         * @param event
+         */
+        SoundVisualizer.prototype.mouseupHandler = function (event) {
+            this.isMouseDown = false;
+        };
+        /**
+         * touchstart Handler
+         * @param event
+         */
+        SoundVisualizer.prototype.touchstartHandler = function (event) {
+            this.isMouseDown = true;
+            this.oldX = event.touches[0].pageX;
+        };
+        /**
+         * touchmove Handler
+         * @param event
+         */
+        SoundVisualizer.prototype.touchmoveHandler = function (event) {
+            if (this.isMouseDown) {
+                var dy = event.touches[0].pageX - this.oldX;
+                this.targetRot -= dy * 0.25;
+                this.oldX = event.touches[0].pageX;
+            }
+        };
+        /**
+         * touchend Handler
+         * @param event
+         */
+        SoundVisualizer.prototype.touchendHandler = function (event) {
+            this.isMouseDown = false;
         };
         return SoundVisualizer;
     })();

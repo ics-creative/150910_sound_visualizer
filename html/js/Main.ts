@@ -1,6 +1,5 @@
 /// <reference path="ts-libs/soundjs/soundjs.d.ts" />
 /// <reference path="ts-libs/threejs/three.d.ts" />
-/// <reference path="ts-libs/threejs/three-trackballcontrols.d.ts" />
 
 module demo {
 
@@ -39,9 +38,6 @@ module demo {
         /** レンダラー */
         private renderer:THREE.WebGLRenderer;
 
-        /** マウスドラッグによるカメラのコントロール */
-        private controls:THREE.TrackballControls;
-
         /** 地面 */
         private grid:THREE.GridHelper;
 
@@ -54,6 +50,18 @@ module demo {
         /** はじめに描画したBox */
         private firstBox:Box;
 
+        /** 回転角度 */
+        private rot:number = 90;
+
+        /** マウスを押した状態かどうかを判別するフラグ */
+        private isMouseDown:boolean = false;
+
+        /** ドラッグ量の差分を取るためにX座標を保持する */
+        private oldX:number = 0;
+
+        /** 目標となる回転角度 */
+        private targetRot:number = 90;
+
         public constructor() {
             // iOS
             if(/(iPad|iPhone|iPod)/g.test( navigator.userAgent )) {
@@ -64,12 +72,25 @@ module demo {
                 this.soundPass = "sound/sound.ogg";
             }
 
+            // touch
+            if(createjs.Touch.isSupported()) {
+                document.addEventListener("touchstart", (event) => this.touchstartHandler(event));
+                document.addEventListener("touchmove", (event) => this.touchmoveHandler(event));
+                document.addEventListener("touchend", (event) => this.touchendHandler(event));
+            }
+            // mouse
+            else {
+                document.addEventListener("mousedown", (event) => this.mousedownHandler(event));
+                document.addEventListener("mousemove", (event) => this.mousemoveHandler(event));
+                document.addEventListener("mouseup", (event) => this.mouseupHandler(event));
+            }
+
             // 3D空間の作成
             this.scene = new THREE.Scene();
 
             // カメラの作成
             this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 200000);
-            this.camera.position.set(2500, 5000, -2500);
+            this.camera.position.set(0, 6000, 0);
 
             // レンダラーの作成
             this.renderer = new THREE.WebGLRenderer({antialias: true});
@@ -83,10 +104,6 @@ module demo {
             this.grid.setColors(0x333333, 0x333333);
             this.grid.position.y = -500;
             this.scene.add(this.grid);
-
-            // TrackballControls
-            this.controls = new THREE.TrackballControls(this.camera);
-            this.controls.target.set(0, 500, 0);
 
             window.addEventListener("resize", () => this.resizeHandler);
             this.resizeHandler();
@@ -225,7 +242,18 @@ module demo {
          * エンターフレームイベントです
          */
         private render() {
-            this.controls.update();
+            // イージングの公式を用いて滑らかにする
+            // 値 += (目標値 - 現在の値) * 減速値
+            this.rot += (this.targetRot - this.rot) * 0.05;
+            //console.log(this.targetRot);
+
+            // 角度に応じてカメラの位置を設定
+            this.camera.position.x = 5000 * Math.sin(this.rot * Math.PI / 180);
+            this.camera.position.z = 5000 * Math.cos(this.rot * Math.PI / 180);
+
+            // 原点方向を見つめる
+            this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
             // Three.js のレンダリング
             this.renderer.render(this.scene, this.camera);
         }
@@ -288,6 +316,64 @@ module demo {
             this.camera.updateProjectionMatrix();
 
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        /**
+         * mousedown Handler
+         * @param event
+         */
+        private mousedownHandler(event) {
+            this.isMouseDown = true;
+            this.oldX = event.pageX;
+        }
+
+        /**
+         * mousemove Handler
+         * @param event
+         */
+        private mousemoveHandler(event) {
+            if(this.isMouseDown) {
+                var dy = event.pageX - this.oldX;
+                this.targetRot -= dy * 0.25;
+                this.oldX = event.pageX;
+            }
+        }
+
+        /**
+         * mouseup Handler
+         * @param event
+         */
+        private mouseupHandler(event) {
+            this.isMouseDown = false;
+        }
+
+        /**
+         * touchstart Handler
+         * @param event
+         */
+        private touchstartHandler(event) {
+            this.isMouseDown = true;
+            this.oldX = event.touches[0].pageX;
+        }
+
+        /**
+         * touchmove Handler
+         * @param event
+         */
+        private touchmoveHandler(event) {
+            if(this.isMouseDown) {
+                var dy = event.touches[0].pageX - this.oldX;
+                this.targetRot -= dy * 0.25;
+                this.oldX = event.touches[0].pageX;
+            }
+        }
+
+        /**
+         * touchend Handler
+         * @param event
+         */
+        private touchendHandler(event) {
+            this.isMouseDown = false;
         }
     }
 
