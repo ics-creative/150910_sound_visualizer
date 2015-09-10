@@ -86,7 +86,6 @@ module demo {
 
             // TrackballControls
             this.controls = new THREE.TrackballControls(this.camera);
-            this.controls.staticMoving = true;
             this.controls.target.set(0, 500, 0);
 
             window.addEventListener("resize", () => this.resizeHandler);
