@@ -15,16 +15,16 @@ var demo;
     var SoundVisualizer = (function () {
         function SoundVisualizer() {
             var _this = this;
-            /* サウンドID */
+            /** サウンドID */
             this.SOUND_ID = "sound";
-            /* Boxの間隔 */
+            /** Boxの間隔 */
             this.BOX_INTERVAL = 100;
-            /* Color */
+            /** Color */
             this.START_COLOR = 0x2DADAC;
             this.END_COLOR = 0xFF337A;
-            /* フーリエ変換を行う分割数。2の乗数でなくてはならない */
+            /** フーリエ変換を行う分割数。2の乗数でなくてはならない */
             this.FFTSIZE = 64;
-            /* Boxを描画するカウント */
+            /** Boxを描画するカウント */
             this.drawCount = -1;
             // iOS
             if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
